@@ -9,16 +9,16 @@ An on-demand research sub-agent with pre-loaded research standards, spawned by t
 ```
 User (webchat)
     │
-    │  "Research: <question>"
+    │  "This is a research task: <question>"
     ▼
 Main agent (Clawdia)
     │
-    │  recognizes research intent
-    │  constructs prompt (question + depth tier + topic slug)
+    │  loads skills/research-router/SKILL.md
+    │  matches trigger phrase (exact, case-insensitive)
+    │  strips trigger + depth:/topic: tokens
+    │  builds prompt via scripts/spawn-research.js
     │
-    │  openclaw cron add  (one-shot, deleteAfterRun: true)
-    │  ─ or ─
-    │  sessions_spawn  (subagent runtime, agentId: "research")
+    │  sessions_spawn(task=…, taskName=…, cwd=…, lightContext=true, cleanup=delete)
     │
     ▼
 Research sub-agent (isolated session)
@@ -38,7 +38,7 @@ Research sub-agent (isolated session)
 Main agent
     │
     │  reads state/runs/<id>.json
-    │  formats prose summary + sources block
+    │  formats prose summary + sources block + confidence header
     │  relays to user via webchat
 ```
 
@@ -93,3 +93,4 @@ Then `sessions_yield` to await completion, read `state/runs/<runId>.json`, relay
 ## Decisions log
 
 - **2026-08-27** — initial scaffold. Depth tiers: quick / standard / deep, default standard. Output = JSON + 2-4 sentence summary. State split: `config/` committed, `state/runs/` gitignored. Skill scope: repo-local first, may promote to workspace-level OpenClaw skill later. **Hand-off is event-triggered via `sessions_spawn` only — no cron.** Cron is for scheduled work (job aggregator, news digest); this sub-agent is fundamentally on-demand.
+- **2026-08-27** — explicit trigger phrase added. User prefixes research requests with "this is a research task" (case-insensitive, exact match at start of message). No automatic intent classification. Router logic in `skills/research-router/SKILL.md`. Depth tier override via inline `depth: quick|standard|deep` token.

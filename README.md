@@ -10,16 +10,22 @@ A sub-agent definition plus a standing skill plus a hand-off helper. When the us
 
 - **`agents/research/agent.md`** — sub-agent identity, workflow, output contract.
 - **`skills/research-standards/SKILL.md`** — standing skill: source tiers, COI checks, recency rules, confidence scoring, citation format.
+- **`skills/research-router/SKILL.md`** — main-agent trigger + handoff logic.
 - **`config/depth-tiers.json`** — quick / standard / deep (default standard).
 - **`config/source-tiers.json`** — tier 1/2/3 definitions.
 - **`config/output-schema.json`** — schema for `state/runs/*.json`.
-- **`scripts/spawn-research.js`** — prompt builder + one-shot cron payload (helper).
-- **`docs/architecture.md`** — diagram, spawn mechanisms, decisions log.
+- **`scripts/spawn-research.js`** — prompt builder. Prints JSON params for `sessions_spawn`.
+- **`docs/architecture.md`** — diagram, decisions log.
 - **`state/runs/`** — per-run output (gitignored).
 
 ## How the main agent uses it
 
-When the user asks for research, the main agent runs `sessions_spawn` with the built prompt, awaits completion, reads `state/runs/<id>.json`, and relays the `summary` + sources to the user. See `docs/architecture.md` for both spawn mechanisms.
+You (or the main agent) prefix the request with **"this is a research task"** (case-insensitive, exact match at the start). The main agent strips the trigger, optionally reads inline `depth:` and `topic:` tokens, builds the spawn parameters via `scripts/spawn-research.js`, calls `sessions_spawn`, awaits the result, reads `state/runs/<id>.json`, and relays the `summary` + sources + confidence to you.
+
+Examples:
+- `This is a research task: what is the EU AI Act status?`
+- `This is a research task (depth: quick): find me the latest on X`
+- `This is a research task depth:deep: what are the trade-offs of Y`
 
 ## Repo conventions
 
