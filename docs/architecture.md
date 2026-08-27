@@ -49,46 +49,24 @@ Main agent
 
 This split is the whole point of the design: research standards are stable, research questions are not.
 
-## Two spawn mechanisms
+## Hand-off mechanism
 
-The architecture supports two equivalent ways to hand off. Both produce an isolated session.
-
-### Option A — `sessions_spawn` from the main agent (preferred)
+Single mechanism only. No cron. The research sub-agent is **event-triggered** by the main agent via `sessions_spawn`. Cron is reserved for scheduled work (job aggregator, news digest); this project is fundamentally different and must not be confused with them.
 
 ```js
 sessions_spawn({
-  task: <built prompt>,
-  taskName: 'research-<topic-slug>',
-  agentId: 'research',           // pre-registered sub-agent
-  cwd: '<repo path>',
+  task: <built prompt>,                  // from scripts/spawn-research.js
+  taskName: 'research-<topic-slug>',     // stable handle for sessions_yield
+  cwd: '<repo path>',                    // so sub-agent can resolve config/skill paths
   runtime: 'subagent',
-  lightContext: true,             // clean slate, load only standing skill
-  cleanup: 'delete',
+  lightContext: true,                    // clean slate, load only standing skill
+  cleanup: 'delete',                     // ephemeral session
 })
 ```
 
-Then `sessions_yield` to await completion, read `state/runs/<id>.json`, relay.
+Then `sessions_yield` to await completion, read `state/runs/<runId>.json`, relay to the user.
 
-### Option B — `openclaw cron add` one-shot
-
-```bash
-openclaw cron add --json '{
-  "name": "research-<topic>",
-  "schedule": {"kind": "at", "at": "<now+5s>"},
-  "sessionTarget": "isolated",
-  "payload": {
-    "kind": "agentTurn",
-    "message": "<built prompt>",
-    "lightContext": true
-  },
-  "deleteAfterRun": true,
-  "enabled": true
-}'
-```
-
-`scripts/spawn-research.js` builds the JSON and prints it. The main agent shells out to add the job, then polls `openclaw cron runs` until done.
-
-Option A is preferred: lower latency, no schedule state, returns directly into the same turn.
+`scripts/spawn-research.js` is the prompt builder — it prints the exact params to pass to `sessions_spawn`. It does not touch the gateway.
 
 ## Output contract
 
@@ -114,4 +92,4 @@ Option A is preferred: lower latency, no schedule state, returns directly into t
 
 ## Decisions log
 
-- **2026-08-27** — initial scaffold. Depth tiers: quick / standard / deep, default standard. Output = JSON + 2-4 sentence summary. State split: `config/` committed, `state/runs/` gitignored. Skill scope: repo-local first, may promote to workspace-level OpenClaw skill later.
+- **2026-08-27** — initial scaffold. Depth tiers: quick / standard / deep, default standard. Output = JSON + 2-4 sentence summary. State split: `config/` committed, `state/runs/` gitignored. Skill scope: repo-local first, may promote to workspace-level OpenClaw skill later. **Hand-off is event-triggered via `sessions_spawn` only — no cron.** Cron is for scheduled work (job aggregator, news digest); this sub-agent is fundamentally on-demand.
