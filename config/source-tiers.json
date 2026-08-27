@@ -1,0 +1,40 @@
+{
+  "_comment": "Default source-tier classification. The sub-agent uses this to score each cited URL. Tier 1 = primary, highest credibility. Lower tiers require explicit justification or downgrade flags.",
+  "tiers": {
+    "1": {
+      "label": "Primary / official",
+      "examples": [
+        "Peer-reviewed journals (Nature, NEJM, ACM)",
+        "Government / regulator publications (SEC, FDA, BAFin, FINMA, EU)",
+        "Official company docs (10-K, prospectus, product docs)",
+        "Court filings, statutes, treaty text",
+        "Standards bodies (ISO, W3C, IETF)"
+      ],
+      "trust": "high",
+      "needs_coi_check": true
+    },
+    "2": {
+      "label": "Established secondary",
+      "examples": [
+        "Reuters, AP, BBC, FT, WSJ, Bloomberg",
+        "Established trade press (The Verge, Ars Technica, Krebs on Security)",
+        "Think tanks with disclosed funding",
+        "Wikipedia (use as index, never as sole citation)"
+      ],
+      "trust": "medium-high",
+      "needs_coi_check": true
+    },
+    "3": {
+      "label": "Tertiary / community",
+      "examples": [
+        "Reddit, Hacker News, Twitter/X, LinkedIn posts",
+        "Personal blogs, Substack without editorial track record",
+        "YouTube videos without primary sources",
+        "Forum threads, Q&A sites"
+      ],
+      "trust": "low",
+      "needs_coi_check": true,
+      "rule": "May be cited only when (a) no tier-1/2 source addresses the claim, AND (b) explicitly flagged as tier-3 with reasoning."
+    }
+  }
+}

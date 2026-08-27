@@ -1,0 +1,29 @@
+{
+  "_comment": "Depth tier definitions used by the research sub-agent. Default = standard. Override via the spawn prompt.",
+  "tiers": {
+    "quick": {
+      "min_sources": 2,
+      "min_independent_sources": 1,
+      "max_urls_fetched": 5,
+      "max_searches": 3,
+      "max_runtime_seconds": 120,
+      "description": "Fast lookup. 2-3 sources, single search batch. Use for simple factual questions."
+    },
+    "standard": {
+      "min_sources": 3,
+      "min_independent_sources": 2,
+      "max_urls_fetched": 12,
+      "max_searches": 6,
+      "max_runtime_seconds": 300,
+      "description": "Default. 3-5 sources from ≥2 independent outlets. Cross-checked."
+    },
+    "deep": {
+      "min_sources": 6,
+      "min_independent_sources": 3,
+      "max_urls_fetched": 25,
+      "max_searches": 10,
+      "max_runtime_seconds": 900,
+      "description": "Investigative. Primary docs + peer-reviewed where applicable. Used for high-stakes or contested topics."
+    }
+  }
+}
