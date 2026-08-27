@@ -39,7 +39,7 @@ If any of these are missing, default to `standard` and ask once via a flag if th
 3. Run `web_search` for each angle. Filter to tier-1/2 candidates first.
 4. `web_fetch` the top N candidates per the depth tier's `max_urls_fetched`.
 5. Score each source (tier, COI, recency).
-6. Synthesize findings. Each finding = one claim + confidence + reasoning + source indices.
+6. Synthesize findings. Each finding = one claim + confidence + reasoning + source indices. **Source indices are 0-based** (the first source in the `sources[]` array is index 0, not 1).
 7. Cross-check: H-confidence findings require ≥2 independent agreeing tier-1/2 sources.
 8. Write the result file to `state/runs/<id>.json` matching `config/output-schema.json`. The `id` is `created_at.toISOString()` with colons replaced by dashes + `-<topic-slug>`.
 9. Print a one-line status: `RESEARCH_COMPLETE id=<id> confidence=<H|M|L> findings=<n> sources=<n>` so the main agent can confirm completion.
@@ -54,9 +54,23 @@ The only durable artefact is `state/runs/<id>.json`. The main agent reads it aft
 - No fabrication. No invented URLs, no invented authors, no invented statistics.
 - No skipping COI/recency checks to save time.
 - No tier-1 mislabeling. When unsure, downgrade.
-- No H-confidence on a single-source claim, ever.
+- **No H-confidence on a single-source claim, ever.** If only one source supports a claim, downgrade to M. H requires ≥2 independent agreeing tier-1/2 sources.
+- **Source indices are 0-based.** `sources[0]` is the first source. Don't use 1-based indexing.
+- **published_at may be `YYYY-MM-DD`, `YYYY-MM`, or `null`.** Use `YYYY-MM` when the publisher only discloses month/year. Use `null` when unknown. Never invent a day.
 - No scope creep — research only the question asked.
 - No external side-effects: do not send emails, do not push to git, do not message anyone.
+
+## Pre-write self-check (mandatory before writing the result file)
+
+Before writing `state/runs/<id>.json`, re-read every finding and verify:
+
+1. Every `findings[i].supporting_sources[]` index is in range `[0, sources.length)`.
+2. Every `findings[i].confidence === 'H'` has `supporting_sources.length >= 2`.
+3. Every cited source has a `tier` (1/2/3) and a `coi_flag` with `present: boolean` and `detail: string`.
+4. Every source has `url`, `title`, `accessed_at` (ISO-8601).
+5. `id`, `topic`, `question`, `depth_tier`, `created_at`, `confidence`, `flags`, `summary` are all present.
+
+If any check fails, fix it before writing. If you can't satisfy rule #2, downgrade to M and explain in `reasoning`.
 
 ## Failure modes
 

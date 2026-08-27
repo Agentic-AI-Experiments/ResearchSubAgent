@@ -41,7 +41,11 @@
           "publisher": { "type": "string" },
           "tier": { "enum": [1, 2, 3] },
           "accessed_at": { "type": "string", "format": "date-time" },
-          "published_at": { "type": "string", "format": "date" },
+          "published_at": {
+            "type": ["string", "null"],
+            "pattern": "^\\d{4}-\\d{2}(-\\d{2})?$",
+            "description": "YYYY-MM-DD if known, YYYY-MM if publisher only gives month, null if unknown."
+          },
           "coi_flag": {
             "type": "object",
             "properties": {
